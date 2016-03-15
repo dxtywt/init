@@ -1,0 +1,7 @@
+#!/usr/bin/expect -f  
+ set password 111111
+ spawn su - root 
+ expect {  
+ "Password:" { send "$password\r" }  
+ }  
+ interact

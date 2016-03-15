@@ -20,6 +20,7 @@ function op_useradd(){
 function op_dir(){
     mkdir -p /data/work/{backup,opbin,opdir}
     mkdir -p /data/work/opbin/crontab/init
+    mkdir /data/core
 }
 
 
@@ -36,39 +37,30 @@ function op_ntp(){
 function op_install_package() {
 
 cd $s_dir
+cp init/soft/git.tar.gz . && tar xf git.tar.gz && rm -f git.tar.gz
+echo 'export GIT_HOME=/data/work/git' >> /etc/profile
+echo 'export PATH=$PATH:$GIT_HOME/bin' >> /etc/profile
 
 
-if [[ $SYSTEM != "x86_64" ]];then
+package=("lrzsz
+          htop
+          expect
+          openssl-devel.x86_64
+          gcc gcc-c++
+          pcre-devel
+          ntpdate
+          python-devel")
 
-    wget -S --user=$httpuser --password=$httppass http://$httphost:9000/psop/soft/libconfuse-2.6-2.el5.rf.i386.rpm  >  /dev/null 2>&1
+for pack in $package; do
+    echo "[Install] install or updata software package: $pack ."
+    yum -y install $pack --nogpgcheck > /dev/null 2>&1
+    reval=$?
+    if [ $reval -ne 0 ];then
+        echo "[Error] install or updata $pack error !"
+    fi
+done
+ldconfig
 
-    rpm -ivh libconfuse-2.6-2.el5.rf.i386.rpm  >  /dev/null 2>&1
-
-else
-
-    wget -S --user=$httpuser --password=$httppass http://$httphost:9000/psop/soft/libconfuse-2.6-2.el5.rf.x86_64.rpm  >  /dev/null 2>&1
-    rpm -ivh libconfuse-2.6-2.el5.rf.x86_64.rpm
-
-fi
-
-    package=("lrzsz
-              apr-util
-              expect
-              openssl-devel.x86_64
-              gcc gcc-c++
-              pcre-devel
-              ntpdate
-              python-devel")
-
-    for pack in $package; do
-        echo "[Install] install or updata software package: $pack ."
-        yum -y install $pack --nogpgcheck > /dev/null 2>&1
-        reval=$?
-        if [ $reval -ne 0 ];then
-            echo "[Error] install or updata $pack error !"
-        fi
-    done
-    ldconfig
 }
 
 #配置zabbix监控客户端
@@ -79,7 +71,7 @@ function op_zabbix_agent() {
 
 }
 
-function ps_history(){
+function op_history(){
     cp /etc/bashrc /etc/bashrc.$(date +"%Y-%m-%d")
     grep "^HISTTIMEFORMAT" /etc/bashrc > /dev/null 2>&1
     if [ $? -ne 0 ];then
@@ -93,9 +85,28 @@ function ps_history(){
     fi
 }
 
-ps_history
+#ulimit限制修改
+function op_ulimit(){
+    echo "* soft nofile 65535" >>/etc/security/limits.conf  
+    echo "* hard nofile 65535" >>/etc/security/limits.conf
+    echo "* soft nproc 65535" >>/etc/security/limits.conf
+    echo "* hard nproc 65535" >>/etc/security/limits.conf
+    echo "/data/core/core-%e-%p-%t" > /proc/sys/kernel/core_pattern
+    echo "/data/core/core-%e-%p-%t" >> /etc/rc.d/rc.local
+
+    if [ -f /etc/security/limits.d/90-nproc.conf ];then
+        echo "* soft nproc 65535" > /etc/security/limits.d/90-nproc.conf
+        echo "* hard nproc 65535" >> /etc/security/limits.d/90-nproc.conf
+    fi
+}
+
+
+
+
+op_history
 op_dir
 op_useradd
 op_install_package
 op_ntp
 op_zabbix_agent
+op_ulimit
