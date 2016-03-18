@@ -43,6 +43,7 @@ echo 'export PATH=$PATH:$GIT_HOME/bin' >> /etc/profile
 
 
 package=("lrzsz
+          dos2unix
           htop
           expect
           openssl-devel.x86_64
