@@ -4,6 +4,7 @@
 
 第一章，硬件配置，raid
 
+
 第二章，系统安装（自动），虚拟机kvm，docker
 
 第三章，系统初始化
@@ -19,9 +20,13 @@
     lvs_vip_bind.sh #后端服务器绑定lvs_vip
     root #切换账户，危险命令
     interactive_input.sh #脚本执行，过程控制，二次确认
+    info.sh #查看系统信息
 
 
 第四章，服务部署
+批量管理脚本
+
+
 
 
 
